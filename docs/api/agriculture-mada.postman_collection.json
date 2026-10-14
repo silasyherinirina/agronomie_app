@@ -1,0 +1,824 @@
+{
+  "info": {
+    "name": "Agriculture Mada API",
+    "description": "Plateforme intelligente de gestion agricole pour les coopératives agricoles à Madagascar — API REST Laravel 13 (Phase 3-4 du mémoire M2). Authentification SPA Sanctum (cookie httpOnly + CSRF).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Injecte automatiquement le jeton CSRF (cookie XSRF-TOKEN posé par",
+          "// GET /sanctum/csrf-cookie) dans l'en-tête X-XSRF-TOKEN, comme le ferait Axios",
+          "// côté frontend React. Nécessite que Postman gère les cookies (activé par défaut).",
+          "if (pm.cookies.has('XSRF-TOKEN')) {",
+          "    pm.request.headers.upsert({",
+          "        key: 'X-XSRF-TOKEN',",
+          "        value: decodeURIComponent(pm.cookies.get('XSRF-TOKEN'))",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "cooperative_id", "value": "1", "type": "string" },
+    { "key": "farmer_id", "value": "1", "type": "string" },
+    { "key": "plot_id", "value": "1", "type": "string" },
+    { "key": "crop_id", "value": "1", "type": "string" },
+    { "key": "crop_variety_id", "value": "1", "type": "string" },
+    { "key": "campaign_id", "value": "1", "type": "string" },
+    { "key": "crop_cycle_id", "value": "1", "type": "string" },
+    { "key": "harvest_id", "value": "1", "type": "string" },
+    { "key": "input_id", "value": "1", "type": "string" },
+    { "key": "input_usage_id", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "0. Get CSRF cookie",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/sanctum/csrf-cookie", "host": ["{{base_url}}"], "path": ["sanctum", "csrf-cookie"] },
+            "description": "À appeler une fois avant login. Pose le cookie XSRF-TOKEN utilisé par le script de pré-requête de la collection."
+          }
+        },
+        {
+          "name": "1. Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] },
+            "description": "Crée la session (cookie httpOnly). Réponse : utilisateur authentifié + rôle."
+          }
+        },
+        {
+          "name": "2. Current user",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api", "user"] }
+          }
+        },
+        {
+          "name": "3. Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/logout", "host": ["{{base_url}}"], "path": ["api", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard (Module H)",
+      "item": [
+        {
+          "name": "Get dashboard summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard?cooperative_id=&campaign_id=",
+              "host": ["{{base_url}}"], "path": ["api", "dashboard"],
+              "query": [
+                { "key": "cooperative_id", "value": "", "description": "Ignoré pour cooperative_manager/farmer (périmètre forcé côté serveur)" },
+                { "key": "campaign_id", "value": "" }
+              ]
+            },
+            "description": "KPIs, totaux de récolte par unité (jamais sommés entre unités différentes), rendement moyen, production/rendement par culture, évolution par campagne, consommation d'intrants, répartition géographique. Périmètre des données selon le rôle du compte connecté."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cooperatives (Module A)",
+      "item": [
+        {
+          "name": "List cooperatives",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/cooperatives?per_page=15&search=&region=&status=",
+              "host": ["{{base_url}}"], "path": ["api", "cooperatives"],
+              "query": [
+                { "key": "per_page", "value": "15" },
+                { "key": "search", "value": "", "description": "Recherche partielle sur le nom" },
+                { "key": "region", "value": "" },
+                { "key": "status", "value": "", "description": "active | inactive" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create cooperative (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Coopérative Vontovorona\",\n  \"region\": \"Analamanga\",\n  \"district\": \"Antananarivo Atsimondrano\",\n  \"commune\": \"Vontovorona\",\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [47.5079, -18.9333] },\n  \"manager_user_id\": null,\n  \"status\": \"active\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/cooperatives", "host": ["{{base_url}}"], "path": ["api", "cooperatives"] },
+            "description": "geometry : GeoJSON Point [longitude, latitude], SRID 4326. Réservé à l'administrateur."
+          }
+        },
+        {
+          "name": "Show cooperative",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cooperatives/{{cooperative_id}}", "host": ["{{base_url}}"], "path": ["api", "cooperatives", "{{cooperative_id}}"] }
+          }
+        },
+        {
+          "name": "Update cooperative",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{base_url}}/api/cooperatives/{{cooperative_id}}", "host": ["{{base_url}}"], "path": ["api", "cooperatives", "{{cooperative_id}}"] },
+            "description": "Administrateur : tous champs. Responsable de coopérative : uniquement sa propre coopérative."
+          }
+        },
+        {
+          "name": "Delete cooperative (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cooperatives/{{cooperative_id}}", "host": ["{{base_url}}"], "path": ["api", "cooperatives", "{{cooperative_id}}"] },
+            "description": "Suppression contrôlée (soft delete)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Farmers (Module B)",
+      "item": [
+        {
+          "name": "List farmers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/farmers?per_page=15&cooperative_id=&search=&status=",
+              "host": ["{{base_url}}"], "path": ["api", "farmers"],
+              "query": [
+                { "key": "per_page", "value": "15" },
+                { "key": "cooperative_id", "value": "" },
+                { "key": "search", "value": "", "description": "Recherche sur prénom/nom" },
+                { "key": "status", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create farmer (cooperative_manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Rina\",\n  \"last_name\": \"Andriamampianina\",\n  \"join_date\": \"2024-03-01\",\n  \"status\": \"active\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/farmers", "host": ["{{base_url}}"], "path": ["api", "farmers"] },
+            "description": "cooperative_id est forcé côté serveur à la coopérative du responsable connecté (ignoré si envoyé)."
+          }
+        },
+        {
+          "name": "Show farmer",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/farmers/{{farmer_id}}", "host": ["{{base_url}}"], "path": ["api", "farmers", "{{farmer_id}}"] }
+          }
+        },
+        {
+          "name": "Update farmer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"inactive\"\n}" },
+            "url": { "raw": "{{base_url}}/api/farmers/{{farmer_id}}", "host": ["{{base_url}}"], "path": ["api", "farmers", "{{farmer_id}}"] }
+          }
+        },
+        {
+          "name": "Delete farmer",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/farmers/{{farmer_id}}", "host": ["{{base_url}}"], "path": ["api", "farmers", "{{farmer_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plots (Module C — PostGIS)",
+      "item": [
+        {
+          "name": "List plots",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/plots?per_page=15&cooperative_id=&farmer_id=&search=&status=",
+              "host": ["{{base_url}}"], "path": ["api", "plots"],
+              "query": [
+                { "key": "per_page", "value": "15" },
+                { "key": "cooperative_id", "value": "" },
+                { "key": "farmer_id", "value": "" },
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create plot (cooperative_manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmer_id\": null,\n  \"name\": \"Parcelle A1\",\n  \"geometry\": {\n    \"type\": \"Polygon\",\n    \"coordinates\": [[[47.50, -18.88], [47.51, -18.88], [47.51, -18.87], [47.50, -18.87], [47.50, -18.88]]]\n  },\n  \"status\": \"active\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/plots", "host": ["{{base_url}}"], "path": ["api", "plots"] },
+            "description": "geometry : GeoJSON Polygon (anneau fermé, [longitude, latitude], SRID 4326). area_ha est calculé automatiquement par PostGIS (ST_Area) — ne jamais l'envoyer manuellement."
+          }
+        },
+        {
+          "name": "Show plot",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/plots/{{plot_id}}", "host": ["{{base_url}}"], "path": ["api", "plots", "{{plot_id}}"] }
+          }
+        },
+        {
+          "name": "Update plot",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Parcelle A1 (renommée)\"\n}" },
+            "url": { "raw": "{{base_url}}/api/plots/{{plot_id}}", "host": ["{{base_url}}"], "path": ["api", "plots", "{{plot_id}}"] }
+          }
+        },
+        {
+          "name": "Delete plot",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/plots/{{plot_id}}", "host": ["{{base_url}}"], "path": ["api", "plots", "{{plot_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crops (Module D)",
+      "item": [
+        {
+          "name": "List crops",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crops?per_page=15&search=&category=", "host": ["{{base_url}}"], "path": ["api", "crops"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "search", "value": "" }, { "key": "category", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create crop (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Riz\",\n  \"category\": \"céréale\",\n  \"cycle_duration_days\": 120\n}" },
+            "url": { "raw": "{{base_url}}/api/crops", "host": ["{{base_url}}"], "path": ["api", "crops"] },
+            "description": "Donnée de référence : création/modification/suppression réservées à l'administrateur."
+          }
+        },
+        {
+          "name": "Show crop",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crops/{{crop_id}}", "host": ["{{base_url}}"], "path": ["api", "crops", "{{crop_id}}"] }
+          }
+        },
+        {
+          "name": "Update crop (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"cycle_duration_days\": 130\n}" },
+            "url": { "raw": "{{base_url}}/api/crops/{{crop_id}}", "host": ["{{base_url}}"], "path": ["api", "crops", "{{crop_id}}"] }
+          }
+        },
+        {
+          "name": "Delete crop (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crops/{{crop_id}}", "host": ["{{base_url}}"], "path": ["api", "crops", "{{crop_id}}"] },
+            "description": "409 si la culture est encore référencée par des cycles culturaux."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crop Varieties (Module D)",
+      "item": [
+        {
+          "name": "List crop varieties",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crop-varieties?per_page=15&crop_id=", "host": ["{{base_url}}"], "path": ["api", "crop-varieties"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "crop_id", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create crop variety (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"crop_id\": {{crop_id}},\n  \"name\": \"X265\"\n}" },
+            "url": { "raw": "{{base_url}}/api/crop-varieties", "host": ["{{base_url}}"], "path": ["api", "crop-varieties"] }
+          }
+        },
+        {
+          "name": "Show crop variety",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crop-varieties/{{crop_variety_id}}", "host": ["{{base_url}}"], "path": ["api", "crop-varieties", "{{crop_variety_id}}"] }
+          }
+        },
+        {
+          "name": "Update crop variety (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"X265 (révisé)\"\n}" },
+            "url": { "raw": "{{base_url}}/api/crop-varieties/{{crop_variety_id}}", "host": ["{{base_url}}"], "path": ["api", "crop-varieties", "{{crop_variety_id}}"] }
+          }
+        },
+        {
+          "name": "Delete crop variety (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crop-varieties/{{crop_variety_id}}", "host": ["{{base_url}}"], "path": ["api", "crop-varieties", "{{crop_variety_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agricultural Campaigns (Module E)",
+      "item": [
+        {
+          "name": "List campaigns",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/agricultural-campaigns?per_page=15&year=&status=", "host": ["{{base_url}}"], "path": ["api", "agricultural-campaigns"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "year", "value": "" }, { "key": "status", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create campaign (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Campagne 2026\",\n  \"year\": 2026,\n  \"season\": \"saison des pluies\",\n  \"start_date\": \"2026-04-01\",\n  \"end_date\": \"2026-10-31\",\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{base_url}}/api/agricultural-campaigns", "host": ["{{base_url}}"], "path": ["api", "agricultural-campaigns"] }
+          }
+        },
+        {
+          "name": "Show campaign",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/agricultural-campaigns/{{campaign_id}}", "host": ["{{base_url}}"], "path": ["api", "agricultural-campaigns", "{{campaign_id}}"] }
+          }
+        },
+        {
+          "name": "Update campaign (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"closed\"\n}" },
+            "url": { "raw": "{{base_url}}/api/agricultural-campaigns/{{campaign_id}}", "host": ["{{base_url}}"], "path": ["api", "agricultural-campaigns", "{{campaign_id}}"] }
+          }
+        },
+        {
+          "name": "Delete campaign (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/agricultural-campaigns/{{campaign_id}}", "host": ["{{base_url}}"], "path": ["api", "agricultural-campaigns", "{{campaign_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crop Cycles",
+      "item": [
+        {
+          "name": "List crop cycles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crop-cycles?per_page=15&plot_id=&campaign_id=&crop_id=&status=", "host": ["{{base_url}}"], "path": ["api", "crop-cycles"],
+              "query": [
+                { "key": "per_page", "value": "15" },
+                { "key": "plot_id", "value": "" },
+                { "key": "campaign_id", "value": "" },
+                { "key": "crop_id", "value": "" },
+                { "key": "status", "value": "", "description": "in_progress | harvested | failed" }
+              ] }
+          }
+        },
+        {
+          "name": "Create crop cycle (cooperative_manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"plot_id\": {{plot_id}},\n  \"crop_id\": {{crop_id}},\n  \"variety_id\": null,\n  \"campaign_id\": {{campaign_id}},\n  \"planting_date\": \"2026-04-15\",\n  \"expected_harvest_date\": \"2026-08-15\",\n  \"status\": \"in_progress\"\n}" },
+            "url": { "raw": "{{base_url}}/api/crop-cycles", "host": ["{{base_url}}"], "path": ["api", "crop-cycles"] },
+            "description": "La parcelle doit appartenir à la coopérative du responsable connecté."
+          }
+        },
+        {
+          "name": "Show crop cycle",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crop-cycles/{{crop_cycle_id}}", "host": ["{{base_url}}"], "path": ["api", "crop-cycles", "{{crop_cycle_id}}"] }
+          }
+        },
+        {
+          "name": "Update crop cycle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"harvested\"\n}" },
+            "url": { "raw": "{{base_url}}/api/crop-cycles/{{crop_cycle_id}}", "host": ["{{base_url}}"], "path": ["api", "crop-cycles", "{{crop_cycle_id}}"] }
+          }
+        },
+        {
+          "name": "Delete crop cycle",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/crop-cycles/{{crop_cycle_id}}", "host": ["{{base_url}}"], "path": ["api", "crop-cycles", "{{crop_cycle_id}}"] },
+            "description": "409 si des récoltes sont encore rattachées à ce cycle."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Harvests (Module F)",
+      "item": [
+        {
+          "name": "List harvests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/harvests?per_page=15&crop_cycle_id=", "host": ["{{base_url}}"], "path": ["api", "harvests"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "crop_cycle_id", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create harvest — rendement calculé",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"crop_cycle_id\": {{crop_cycle_id}},\n  \"harvest_date\": \"2026-08-20\",\n  \"quantity\": 2500,\n  \"unit\": \"kg\",\n  \"yield_source\": \"calculated\",\n  \"quality\": \"bonne\",\n  \"observations\": \"Récolte dans de bonnes conditions.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/harvests", "host": ["{{base_url}}"], "path": ["api", "harvests"] },
+            "description": "yield_source=calculated : yield_value = quantity / plot.area_ha, calculé automatiquement."
+          }
+        },
+        {
+          "name": "Create harvest — rendement déclaré",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"crop_cycle_id\": {{crop_cycle_id}},\n  \"harvest_date\": \"2026-08-20\",\n  \"quantity\": 2500,\n  \"unit\": \"kg\",\n  \"yield_source\": \"declared\",\n  \"yield_value\": 3000\n}" },
+            "url": { "raw": "{{base_url}}/api/harvests", "host": ["{{base_url}}"], "path": ["api", "harvests"] },
+            "description": "yield_source=declared : yield_value obligatoire, saisi tel quel."
+          }
+        },
+        {
+          "name": "Show harvest",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/harvests/{{harvest_id}}", "host": ["{{base_url}}"], "path": ["api", "harvests", "{{harvest_id}}"] }
+          }
+        },
+        {
+          "name": "Update harvest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"observations\": \"Correction observation.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/harvests/{{harvest_id}}", "host": ["{{base_url}}"], "path": ["api", "harvests", "{{harvest_id}}"] }
+          }
+        },
+        {
+          "name": "Delete harvest (admin uniquement)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/harvests/{{harvest_id}}", "host": ["{{base_url}}"], "path": ["api", "harvests", "{{harvest_id}}"] },
+            "description": "403 pour un cooperative_manager : suppression restreinte à l'administrateur pour la traçabilité."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inputs (Module G)",
+      "item": [
+        {
+          "name": "List inputs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/inputs?per_page=15&type=&search=", "host": ["{{base_url}}"], "path": ["api", "inputs"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "type", "value": "", "description": "semence | engrais | phytosanitaire | autre" }, { "key": "search", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create input (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Urée 46%\",\n  \"type\": \"engrais\",\n  \"unit\": \"kg\"\n}" },
+            "url": { "raw": "{{base_url}}/api/inputs", "host": ["{{base_url}}"], "path": ["api", "inputs"] }
+          }
+        },
+        {
+          "name": "Show input",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/inputs/{{input_id}}", "host": ["{{base_url}}"], "path": ["api", "inputs", "{{input_id}}"] }
+          }
+        },
+        {
+          "name": "Update input (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"unit\": \"sac\"\n}" },
+            "url": { "raw": "{{base_url}}/api/inputs/{{input_id}}", "host": ["{{base_url}}"], "path": ["api", "inputs", "{{input_id}}"] }
+          }
+        },
+        {
+          "name": "Delete input (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/inputs/{{input_id}}", "host": ["{{base_url}}"], "path": ["api", "inputs", "{{input_id}}"] },
+            "description": "409 si encore référencé par des utilisations enregistrées."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Weather Observations (Module L — Phase 11, extension)",
+      "item": [
+        {
+          "name": "Get plot forecast (Open-Meteo, real, no key)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/plots/{{plot_id}}/weather", "host": ["{{base_url}}"], "path": ["api", "plots", "{{plot_id}}", "weather"] },
+            "description": "Météo actuelle + prévision 5 jours pour le centroïde de la parcelle (fournisseur externe réel, mis en cache 30 min), combinée aux observations manuelles récentes. `forecast: null` + `provider_error` renseigné si le fournisseur est indisponible — les observations manuelles restent consultables."
+          }
+        },
+        {
+          "name": "List observations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/weather-observations?per_page=15&plot_id=&from=&to=", "host": ["{{base_url}}"], "path": ["api", "weather-observations"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "plot_id", "value": "" }, { "key": "from", "value": "" }, { "key": "to", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create observation (manual entry)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plot_id\": {{plot_id}},\n  \"observed_date\": \"2026-08-20\",\n  \"temperature\": 26,\n  \"precipitation\": 45.5,\n  \"humidity\": 80,\n  \"source\": \"relevé terrain\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/weather-observations", "host": ["{{base_url}}"], "path": ["api", "weather-observations"] },
+            "description": "Saisie manuelle uniquement — aucun fournisseur météo externe n'est intégré. Au moins une mesure (température/précipitations/humidité) est requise."
+          }
+        },
+        {
+          "name": "Update observation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"precipitation\": 50\n}" },
+            "url": { "raw": "{{base_url}}/api/weather-observations/1", "host": ["{{base_url}}"], "path": ["api", "weather-observations", "1"] }
+          }
+        },
+        {
+          "name": "Delete observation",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/weather-observations/1", "host": ["{{base_url}}"], "path": ["api", "weather-observations", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predictions (Module J/K — Phase 10)",
+      "item": [
+        {
+          "name": "Suggested inputs from real data",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/plots/{{plot_id}}/prediction-inputs?campaign_id=", "host": ["{{base_url}}"], "path": ["api", "plots", "{{plot_id}}", "prediction-inputs"],
+              "query": [{ "key": "campaign_id", "value": "" }] },
+            "description": "Valeurs dérivées de données réelles (superficie PostGIS, intrants enregistrés, cycle cultural). rainfall_mm et variety_class restent null (non déductibles) — jamais de valeur inventée."
+          }
+        },
+        {
+          "name": "Request a prediction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plot_id\": {{plot_id}},\n  \"campaign_id\": {{campaign_id}},\n  \"features\": {\n    \"area_ha\": 1.5,\n    \"fertilizer_kg_per_ha\": 60,\n    \"rainfall_mm\": 1300,\n    \"planting_month\": 11,\n    \"variety_class\": \"amelioree\"\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/predictions", "host": ["{{base_url}}"], "path": ["api", "predictions"] },
+            "description": "Laravel appelle le service IA (FastAPI) en temps réel, persiste le résultat (production_predictions + model_versions) et le renvoie avec métriques, variables importantes et modèle utilisé. 503 si le service IA n'a aucun modèle actif. Réservé à admin/cooperative_manager."
+          }
+        },
+        {
+          "name": "List predictions (history)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/predictions?per_page=15&plot_id=&campaign_id=", "host": ["{{base_url}}"], "path": ["api", "predictions"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "plot_id", "value": "" }, { "key": "campaign_id", "value": "" }] }
+          }
+        },
+        {
+          "name": "Show prediction",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/predictions/1", "host": ["{{base_url}}"], "path": ["api", "predictions", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Input Usages (Module G)",
+      "item": [
+        {
+          "name": "List input usages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/input-usages?per_page=15&plot_id=&campaign_id=", "host": ["{{base_url}}"], "path": ["api", "input-usages"],
+              "query": [{ "key": "per_page", "value": "15" }, { "key": "plot_id", "value": "" }, { "key": "campaign_id", "value": "" }] }
+          }
+        },
+        {
+          "name": "Create input usage (cooperative_manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"input_id\": {{input_id}},\n  \"plot_id\": {{plot_id}},\n  \"campaign_id\": {{campaign_id}},\n  \"farmer_id\": null,\n  \"quantity\": 50,\n  \"cost\": 75000,\n  \"date\": \"2026-05-01\",\n  \"observations\": \"Épandage pré-plantation.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/input-usages", "host": ["{{base_url}}"], "path": ["api", "input-usages"] }
+          }
+        },
+        {
+          "name": "Show input usage",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/input-usages/{{input_usage_id}}", "host": ["{{base_url}}"], "path": ["api", "input-usages", "{{input_usage_id}}"] }
+          }
+        },
+        {
+          "name": "Update input usage",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"observations\": \"Quantité corrigée après vérification.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/input-usages/{{input_usage_id}}", "host": ["{{base_url}}"], "path": ["api", "input-usages", "{{input_usage_id}}"] }
+          }
+        },
+        {
+          "name": "Delete input usage (admin uniquement)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/input-usages/{{input_usage_id}}", "host": ["{{base_url}}"], "path": ["api", "input-usages", "{{input_usage_id}}"] },
+            "description": "403 pour un cooperative_manager : suppression restreinte à l'administrateur pour la traçabilité."
+          }
+        }
+      ]
+    }
+  ]
+}

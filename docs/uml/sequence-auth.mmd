@@ -1,0 +1,14 @@
+sequenceDiagram
+    actor U as Utilisateur
+    participant FE as React SPA
+    participant API as Laravel (Sanctum)
+
+    FE->>API: GET /sanctum/csrf-cookie
+    API-->>FE: Set-Cookie XSRF-TOKEN
+    U->>FE: Saisit email/mot de passe
+    FE->>API: POST /login {email, password}
+    API->>API: Vérifie credentials, crée session/cookie
+    API-->>FE: 204 + cookie session (httpOnly)
+    FE->>API: GET /api/user (cookie envoyé automatiquement)
+    API-->>FE: 200 {user, role}
+    FE-->>U: Redirection selon rôle

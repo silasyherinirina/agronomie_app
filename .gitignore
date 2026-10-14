@@ -1,0 +1,64 @@
+# ================================
+# Racine
+# ================================
+.DS_Store
+Thumbs.db
+*.log
+
+# ================================
+# Backend (Laravel)
+# ================================
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/.env.*.local
+backend/storage/*.key
+backend/bootstrap/cache/*.php
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+!backend/storage/framework/cache/.gitignore
+!backend/storage/framework/sessions/.gitignore
+!backend/storage/framework/views/.gitignore
+!backend/storage/logs/.gitignore
+backend/public/hot
+backend/public/storage
+backend/.phpunit.result.cache
+backend/Homestead.json
+backend/Homestead.yaml
+backend/auth.json
+
+# ================================
+# Frontend (React + Vite)
+# ================================
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*.local
+frontend/*.local
+frontend/coverage/
+
+# ================================
+# AI Service (FastAPI / Python)
+# ================================
+ai-service/venv/
+ai-service/.venv/
+ai-service/__pycache__/
+ai-service/**/__pycache__/
+ai-service/*.pyc
+ai-service/.env
+ai-service/models/*.joblib
+ai-service/models/*.pkl
+# Registre de modèles entraînés (Phase 8+, un sous-dossier par modèle : metadata.json +
+# model.joblib) — artefacts générés localement, jamais versionnés.
+ai-service/models/*/
+ai-service/data/raw/
+ai-service/.pytest_cache/
+
+# ================================
+# IDE / OS
+# ================================
+.vscode/*
+!.vscode/extensions.json
+.idea/

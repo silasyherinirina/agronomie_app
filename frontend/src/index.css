@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@import './styles/tailwind-theme.css';
+
+/* Design system CSS classique encore utilisé par les pages non migrées (Phase C — migration
+   progressive, cf. cahier des charges §40 : ne pas casser l'existant). À supprimer
+   composant par composant, jamais en un seul bloc. */
+@import './styles/globals.css';

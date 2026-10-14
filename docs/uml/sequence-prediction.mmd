@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor Resp as Responsable coopérative
+    participant FE as React SPA
+    participant API as Laravel API
+    participant PS as PredictionService
+    participant AI as FastAPI /predict
+    participant DB as PostgreSQL
+
+    Resp->>FE: Demande une prévision (culture, parcelle, campagne)
+    FE->>API: POST /api/predictions {crop_id, plot_id, campaign_id}
+    API->>PS: predict(context)
+    PS->>DB: Récupère features historiques
+    PS->>AI: POST /predict {features}
+    AI->>AI: Charge model_version actif, exécute .predict()
+    AI-->>PS: {predicted_yield, model_version, metrics}
+    PS->>DB: INSERT production_predictions
+    PS-->>API: ProductionPredictionResource
+    API-->>FE: 200 OK {résultat, modèle, métriques, date}
+    FE-->>Resp: Affichage résultat + avertissement "estimation, pas certitude"

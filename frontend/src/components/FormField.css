@@ -1,0 +1,41 @@
+/* Champs de formulaire — réécrit en Tailwind (@apply). Le sélecteur `.form-field input /
+   select / textarea` continue de cibler tous les champs de toutes les pages existantes :
+   aucune page à modifier, mais le rendu réel est désormais celui des utilitaires Tailwind
+   (mêmes tokens que le reste de l'app), pas une feuille de style indépendante.
+   @reference obligatoire : ce fichier est importé isolément (`import './FormField.css'` dans
+   le composant), pas via index.css — sans lui, @apply ne "voit" pas les utilitaires Tailwind. */
+@reference "../index.css";
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  @apply w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink shadow-xs transition-colors;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  @apply border-primary outline-2 outline-primary-light;
+}
+
+.form-field input:disabled,
+.form-field select:disabled,
+.form-field textarea:disabled {
+  @apply cursor-not-allowed bg-canvas text-muted;
+}
+
+.form-field textarea {
+  @apply min-h-[70px] resize-y;
+}
+
+/* Disposition partagée par tous les formulaires métier (Coopératives, Agriculteurs,
+   Parcelles, Récoltes...). Bug corrigé ici : ces deux classes étaient utilisées par 11 pages
+   sans plus être définies nulle part (règle perdue lors d'un nettoyage CSS précédent) — les
+   formulaires s'affichaient donc sans mise en page de grille ni alignement des actions. */
+.form-grid {
+  @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+.form-actions {
+  @apply mt-2 flex justify-end gap-3;
+}

@@ -1,0 +1,49 @@
+/*
+ * Design tokens Tailwind v4 (CSS-first, cahier des charges §40 : pas de tailwind.config.js
+ * obsolète). Mappe la palette déjà existante (globals.css, conservée pour les pages non
+ * encore migrées) vers des utilitaires Tailwind (bg-primary, text-muted, rounded-lg...), pour
+ * que les composants migrés et les pages en CSS classique restent visuellement identiques
+ * pendant la transition progressive (Phase C).
+ *
+ * Noms volontairement différents des variables --color-bg/--color-text/--color-border de
+ * globals.css (pour éviter des utilitaires bégayants du type border-border) : les deux
+ * systèmes cohabitent sans se marcher dessus, sans dupliquer les valeurs sources de vérité
+ * (mêmes codes couleur qu'origine, cf. globals.css).
+ */
+@theme {
+  --color-primary: #1f7a4d;
+  --color-primary-dark: #155c39;
+  --color-primary-light: #e6f4ec;
+  --color-accent: #b8860b;
+  --color-accent-light: #f7ecd3;
+
+  /* Vert profond dédié à la sidebar (distinct de --color-primary-dark, réservé aux boutons/
+     textes, pour ne pas faire dépendre l'habillage de la coquille app d'une teinte utilitaire) —
+     cf. refonte Dashboard inspirée de la maquette de référence (sidebar flottante, vert forêt). */
+  --color-sidebar: #142c1e;
+  --color-sidebar-hover: rgba(255, 255, 255, 0.08);
+
+  /* Fond légèrement chaud (crème) plutôt que gris froid — même luminosité, plus premium,
+     cohérent sur toutes les pages (coquille + Dashboard). */
+  --color-canvas: #f7f5ef;
+  --color-surface: #ffffff;
+  --color-line: #dfe3e0;
+  --color-ink: #1f2622;
+  --color-muted: #5b655f;
+
+  --color-success: #1f7a4d;
+  --color-success-bg: #e6f4ec;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbe9e7;
+  --color-warning: #8a6100;
+  --color-warning-bg: #fdf3d9;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

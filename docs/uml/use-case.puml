@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+actor Administrateur as Admin
+actor "Responsable coopérative" as Resp
+actor Agriculteur as Farmer
+actor "Analyste / Décideur" as Analyst
+
+rectangle "Plateforme Agriculture Mada" {
+  usecase "Gérer utilisateurs" as UC1
+  usecase "Gérer coopératives" as UC2
+  usecase "Gérer agriculteurs" as UC3
+  usecase "Gérer parcelles + géométrie" as UC4
+  usecase "Gérer cultures" as UC5
+  usecase "Gérer campagnes agricoles" as UC6
+  usecase "Enregistrer récoltes" as UC7
+  usecase "Gérer intrants" as UC8
+  usecase "Consulter tableau de bord" as UC9
+  usecase "Visualiser carte des parcelles" as UC10
+  usecase "Demander une prévision" as UC11
+  usecase "Consulter historique personnel" as UC12
+  usecase "Comparer productions" as UC13
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC9
+
+Resp --> UC3
+Resp --> UC4
+Resp --> UC5
+Resp --> UC6
+Resp --> UC7
+Resp --> UC8
+Resp --> UC9
+Resp --> UC10
+Resp --> UC11
+
+Farmer --> UC12
+Farmer --> UC10
+
+Analyst --> UC9
+Analyst --> UC13
+Analyst --> UC11
+
+UC11 ..> UC9 : <<include>>
+UC7 ..> UC4 : <<include>>
+@enduml

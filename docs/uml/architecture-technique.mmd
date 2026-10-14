@@ -1,0 +1,8 @@
+flowchart LR
+    U[Utilisateur navigateur] -->|HTTPS| FE[React + TypeScript + Vite<br/>SPA]
+    FE -->|Axios / REST JSON<br/>Sanctum SPA cookie| BE[Laravel 13 API<br/>PHP 8.5.7]
+    BE -->|Eloquent / PDO pgsql| DB[(PostgreSQL 18.6<br/>+ PostGIS 3.6.2)]
+    BE -->|HTTP interne REST| AI[FastAPI<br/>Python venv dédié]
+    AI -->|lecture via API Laravel<br/>ou export contrôlé| BE
+    AI --> ML[(scikit-learn<br/>modèles sérialisés .joblib)]
+    BE -.futur.-> METEO[Fournisseur météo externe]

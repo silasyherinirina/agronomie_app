@@ -1,0 +1,22 @@
+@startuml
+start
+:Créer campagne agricole (si absente);
+:Sélectionner parcelle;
+:Sélectionner culture (+ variété si applicable);
+:Créer crop_cycle (statut = "planifié");
+:Enregistrer date de plantation;
+:Statut = "en cours";
+repeat
+  :Enregistrer utilisation d'intrants;
+repeat while (autre intrant à enregistrer ?) is (oui)
+->non;
+if (Récolte disponible ?) then (oui)
+  :Enregistrer récolte (quantité, unité);
+  :Calculer rendement = quantité / superficie;
+  :Statut cycle = "récolté";
+else (non)
+  :Statut cycle = "abandonné/en attente";
+endif
+:Mettre à jour indicateurs du tableau de bord;
+stop
+@enduml

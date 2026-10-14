@@ -1,0 +1,122 @@
+erDiagram
+    USERS ||--o| FARMERS : "lié à"
+    USERS ||--o| COOPERATIVES : "responsable de"
+    COOPERATIVES ||--o{ FARMERS : "regroupe"
+    COOPERATIVES ||--o{ PLOTS : "possède"
+    FARMERS |o--o{ PLOTS : "exploite"
+    CROPS ||--o{ CROP_VARIETIES : "décline"
+    PLOTS ||--o{ CROP_CYCLES : "porte"
+    CROPS ||--o{ CROP_CYCLES : "concerne"
+    CROP_VARIETIES |o--o{ CROP_CYCLES : "utilisée"
+    AGRICULTURAL_CAMPAIGNS ||--o{ CROP_CYCLES : "encadre"
+    CROP_CYCLES ||--o{ HARVESTS : "produit"
+    INPUTS ||--o{ INPUT_USAGES : "utilisé"
+    PLOTS ||--o{ INPUT_USAGES : "reçoit"
+    AGRICULTURAL_CAMPAIGNS ||--o{ INPUT_USAGES : "pendant"
+    FARMERS |o--o{ INPUT_USAGES : "applique"
+    MODEL_VERSIONS ||--o{ PRODUCTION_PREDICTIONS : "génère"
+
+    USERS {
+        bigint id PK
+        string name
+        string email UK
+        string password
+        string role
+    }
+    COOPERATIVES {
+        bigint id PK
+        string name
+        string region
+        geometry location "Point,4326"
+        bigint manager_user_id FK
+        string status
+    }
+    FARMERS {
+        bigint id PK
+        bigint cooperative_id FK
+        bigint user_id FK
+        string first_name
+        string last_name
+        date join_date
+        string status
+    }
+    PLOTS {
+        bigint id PK
+        bigint cooperative_id FK
+        bigint farmer_id FK
+        string name
+        geometry geom "Polygon,4326"
+        numeric area_ha
+        string status
+    }
+    CROPS {
+        bigint id PK
+        string name
+        string category
+        int cycle_duration_days
+    }
+    CROP_VARIETIES {
+        bigint id PK
+        bigint crop_id FK
+        string name
+    }
+    AGRICULTURAL_CAMPAIGNS {
+        bigint id PK
+        string name
+        int year
+        string season
+        date start_date
+        date end_date
+        string status
+    }
+    CROP_CYCLES {
+        bigint id PK
+        bigint plot_id FK
+        bigint crop_id FK
+        bigint variety_id FK
+        bigint campaign_id FK
+        date planting_date
+        string status
+    }
+    HARVESTS {
+        bigint id PK
+        bigint crop_cycle_id FK
+        date harvest_date
+        numeric quantity
+        string unit
+        numeric yield_value
+        string quality
+    }
+    INPUTS {
+        bigint id PK
+        string name
+        string type
+        string unit
+    }
+    INPUT_USAGES {
+        bigint id PK
+        bigint input_id FK
+        bigint plot_id FK
+        bigint campaign_id FK
+        bigint farmer_id FK
+        numeric quantity
+        numeric cost
+        date date
+    }
+    MODEL_VERSIONS {
+        bigint id PK
+        string name
+        string algorithm
+        string version
+        jsonb metrics
+        boolean is_active
+    }
+    PRODUCTION_PREDICTIONS {
+        bigint id PK
+        bigint model_version_id FK
+        bigint crop_id FK
+        bigint plot_id FK
+        bigint campaign_id FK
+        numeric predicted_yield
+        jsonb input_features
+    }

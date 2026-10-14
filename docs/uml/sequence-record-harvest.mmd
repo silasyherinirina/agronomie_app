@@ -1,0 +1,17 @@
+sequenceDiagram
+    actor Resp as Responsable coopérative
+    participant FE as React SPA
+    participant API as Laravel API
+    participant SVC as HarvestService
+    participant DB as PostgreSQL
+
+    Resp->>FE: Saisit récolte (cycle, date, quantité, unité)
+    FE->>API: POST /api/harvests
+    API->>API: StoreHarvestRequest (validation)
+    API->>SVC: create(data)
+    SVC->>DB: SELECT plot.area_ha FROM crop_cycle join plot
+    SVC->>SVC: yield_value = quantity / area_ha
+    SVC->>DB: INSERT harvest
+    DB-->>SVC: Harvest
+    SVC-->>API: HarvestResource
+    API-->>FE: 201 Created

@@ -1,0 +1,50 @@
+.prediction-result {
+  border-color: var(--color-primary);
+}
+
+.prediction-headline {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.prediction-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.prediction-unit {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.importance-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 50px;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.85rem;
+}
+
+.importance-label {
+  color: var(--color-text-muted);
+}
+
+.importance-track {
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.importance-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 999px;
+}
+
+.importance-value {
+  text-align: right;
+  font-weight: 600;
+}

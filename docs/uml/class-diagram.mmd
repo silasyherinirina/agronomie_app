@@ -1,0 +1,130 @@
+classDiagram
+    class User {
+        +int id
+        +string name
+        +string email
+        +string password
+        +enum role
+        +timestamps
+    }
+    class Cooperative {
+        +int id
+        +string name
+        +string region
+        +string district
+        +string commune
+        +geometry location  ~Point, SRID 4326~
+        +int manager_user_id
+        +enum status
+    }
+    class Farmer {
+        +int id
+        +int cooperative_id
+        +int user_id
+        +string first_name
+        +string last_name
+        +date join_date
+        +enum status
+    }
+    class Plot {
+        +int id
+        +int cooperative_id
+        +int farmer_id
+        +string name
+        +geometry geom  ~Polygon, SRID 4326~
+        +decimal area_ha
+        +string soil_type
+        +enum status
+    }
+    class Crop {
+        +int id
+        +string name
+        +string category
+        +int cycle_duration_days
+    }
+    class CropVariety {
+        +int id
+        +int crop_id
+        +string name
+    }
+    class AgriculturalCampaign {
+        +int id
+        +string name
+        +int year
+        +enum season
+        +date start_date
+        +date end_date
+        +enum status
+    }
+    class CropCycle {
+        +int id
+        +int plot_id
+        +int crop_id
+        +int variety_id
+        +int campaign_id
+        +date planting_date
+        +date expected_harvest_date
+        +enum status
+    }
+    class Harvest {
+        +int id
+        +int crop_cycle_id
+        +date harvest_date
+        +decimal quantity
+        +string unit
+        +decimal yield_value
+        +string quality
+        +text observations
+    }
+    class Input {
+        +int id
+        +string name
+        +enum type
+        +string unit
+    }
+    class InputUsage {
+        +int id
+        +int input_id
+        +int plot_id
+        +int campaign_id
+        +int farmer_id
+        +decimal quantity
+        +decimal cost
+        +date date
+    }
+    class ModelVersion {
+        +int id
+        +string name
+        +string algorithm
+        +string version
+        +datetime trained_at
+        +json metrics
+        +bool is_active
+    }
+    class ProductionPrediction {
+        +int id
+        +int model_version_id
+        +int crop_id
+        +int plot_id
+        +int campaign_id
+        +decimal predicted_yield
+        +json input_features
+        +datetime created_at
+    }
+
+    User "1" --> "0..1" Farmer
+    User "1" --> "0..1" Cooperative : manages
+    Cooperative "1" --> "*" Farmer
+    Cooperative "1" --> "*" Plot
+    Farmer "0..1" --> "*" Plot
+    Crop "1" --> "*" CropVariety
+    Plot "1" --> "*" CropCycle
+    Crop "1" --> "*" CropCycle
+    CropVariety "0..1" --> "*" CropCycle
+    AgriculturalCampaign "1" --> "*" CropCycle
+    CropCycle "1" --> "*" Harvest
+    Input "1" --> "*" InputUsage
+    Plot "1" --> "*" InputUsage
+    AgriculturalCampaign "1" --> "*" InputUsage
+    Farmer "0..1" --> "*" InputUsage
+    ModelVersion "1" --> "*" ProductionPrediction

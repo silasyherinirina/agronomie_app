@@ -1,0 +1,17 @@
+sequenceDiagram
+    actor Resp as Responsable coopérative
+    participant FE as React SPA
+    participant API as Laravel API
+    participant SVC as PlotService
+    participant DB as PostgreSQL/PostGIS
+
+    Resp->>FE: Dessine/saisit le polygone (Leaflet)
+    FE->>API: POST /api/plots {geojson, farmer_id, ...}
+    API->>API: StorePlotRequest (validation GeoJSON, superficie > 0)
+    API->>SVC: create(data)
+    SVC->>DB: INSERT ... ST_GeomFromGeoJSON(...)
+    SVC->>DB: SELECT ST_Area(geography(geom))
+    DB-->>SVC: area_m2
+    SVC-->>API: Plot (avec area_ha calculée)
+    API-->>FE: 201 Created + PlotResource
+    FE-->>Resp: Confirmation + affichage sur carte
